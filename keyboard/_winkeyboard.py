@@ -17,7 +17,7 @@ from ._suppress import KeyTable
 # this would be simply #include "windows.h".
 
 import ctypes
-from ctypes import c_short, c_char, c_uint8, c_int32, c_int, c_uint, c_uint32, c_long, Structure, CFUNCTYPE, POINTER
+from ctypes import c_short, c_char, c_uint8, c_int32, c_int, c_uint, c_uint32, c_long, Structure, CFUNCTYPE, POINTER, byref
 from ctypes.wintypes import WORD, DWORD, BOOL, HHOOK, MSG, LPWSTR, WCHAR, WPARAM, LPARAM, LONG
 LPMSG = POINTER(MSG)
 ULONG_PTR = POINTER(DWORD)
@@ -74,11 +74,11 @@ class INPUT(ctypes.Structure):
 LowLevelKeyboardProc = CFUNCTYPE(c_int, WPARAM, LPARAM, POINTER(KBDLLHOOKSTRUCT))
 
 SetWindowsHookEx = user32.SetWindowsHookExA
-#SetWindowsHookEx.argtypes = [c_int, LowLevelKeyboardProc, c_int, c_int]
+SetWindowsHookEx.argtypes = [c_int, LowLevelKeyboardProc, c_int, c_int]
 SetWindowsHookEx.restype = HHOOK
 
 CallNextHookEx = user32.CallNextHookEx
-#CallNextHookEx.argtypes = [c_int , c_int, c_int, POINTER(KBDLLHOOKSTRUCT)]
+CallNextHookEx.argtypes = [c_int , c_int, c_int, POINTER(KBDLLHOOKSTRUCT)]
 CallNextHookEx.restype = c_int
 
 UnhookWindowsHookEx = user32.UnhookWindowsHookEx
@@ -448,7 +448,7 @@ def prepare_intercept(callback):
 
     WH_KEYBOARD_LL = c_int(13)
     keyboard_callback = LowLevelKeyboardProc(low_level_keyboard_handler)
-    keyboard_hook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboard_callback, NULL, NULL)
+    keyboard_hook = SetWindowsHookEx(WH_KEYBOARD_LL, byref(keyboard_callback), NULL, NULL)
 
     # Register to remove the hook when the interpreter exits. Unfortunately a
     # try/finally block doesn't seem to work here.
